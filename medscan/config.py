@@ -184,6 +184,18 @@ class Settings(BaseSettings):
             sync_url = sync_url.replace("postgresql+asyncpg://", "postgresql://")
 
         self.sync_database_url = sync_url
+
+        # 3. Clean up and resolve Redis/Celery URLs
+        default_redis = "redis://localhost:6379/0"
+        default_broker = "redis://localhost:6379/0"
+        default_backend = "redis://localhost:6379/1"
+
+        if self.redis_url != default_redis:
+            if self.celery_broker_url == default_broker:
+                self.celery_broker_url = self.redis_url
+            if self.celery_result_backend == default_backend:
+                self.celery_result_backend = self.redis_url
+
         return self
 
     def ensure_upload_dir(self) -> None:
