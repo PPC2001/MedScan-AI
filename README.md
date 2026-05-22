@@ -1,3 +1,13 @@
+---
+title: MedScan AI Backend
+emoji: 🏥
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 8000
+pinned: false
+---
+
 # MedScan AI 🏥
 
 **Multimodal Clinical Document Intelligence Pipeline**
