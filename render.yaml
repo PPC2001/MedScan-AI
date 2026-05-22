@@ -1,0 +1,61 @@
+services:
+  # 1. FastAPI Web API Service
+  - type: web
+    name: medscan-api
+    env: python
+    buildCommand: "pip install uv && uv pip install -e . --system"
+    startCommand: "python -m uvicorn medscan.api.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medscan-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: medscan-redis
+          property: connectionString
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: API_KEY
+        value: medscan-dev-key-change-me
+      # HuggingFace hub requires cache folders in home
+      - key: HF_HOME
+        value: /opt/render/project/src/.hf_cache
+
+  # 2. Celery Pipeline Background Worker
+  - type: worker
+    name: medscan-worker
+    env: python
+    buildCommand: "pip install uv && uv pip install -e . --system"
+    startCommand: "celery -A medscan.tasks.celery_app.celery_app worker --loglevel=info -Q pipeline --pool=solo"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: medscan-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: medscan-redis
+          property: connectionString
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: HF_HOME
+        value: /opt/render/project/src/.hf_cache
+
+  # 3. Redis Message Broker for Celery
+  - type: redis
+    name: medscan-redis
+    ipAllowList: [] # Access restricted to within Render's internal network only
+
+databases:
+  # 4. PostgreSQL Database Instance (pgvector support out-of-the-box)
+  - name: medscan-db
+    databaseName: medscan
+    user: medscan_user
+    plan: free # free tier PostgreSQL on Render
