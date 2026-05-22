@@ -12,7 +12,7 @@ LLM provider priority:
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -157,6 +157,34 @@ class Settings(BaseSettings):
         if v not in allowed:
             raise ValueError(f"vector_store_backend must be one of {allowed}")
         return v
+
+    @model_validator(mode="after")
+    def resolve_database_urls(self) -> "Settings":
+        # 1. Clean up database_url
+        url = self.database_url
+        if url.startswith("postgres://"):
+            url = "postgresql://" + url[len("postgres://"):]
+        if not url.startswith("postgresql+asyncpg://") and url.startswith("postgresql://"):
+            url = "postgresql+asyncpg://" + url[len("postgresql://"):]
+        self.database_url = url
+
+        # 2. Derive sync_database_url if not explicitly custom configured
+        sync_url = self.sync_database_url
+        if sync_url.startswith("postgres://"):
+            sync_url = "postgresql://" + sync_url[len("postgres://"):]
+
+        default_sync = "postgresql://medscan:medscan_secret@localhost:5432/medscan"
+        default_async = "postgresql+asyncpg://medscan:medscan_secret@localhost:5432/medscan"
+
+        if (self.database_url != default_async) and (self.sync_database_url == default_sync):
+            sync_url = self.database_url.replace("postgresql+asyncpg://", "postgresql://")
+
+        # Clean up any potential postgresql+asyncpg in sync_database_url
+        if sync_url.startswith("postgresql+asyncpg://"):
+            sync_url = sync_url.replace("postgresql+asyncpg://", "postgresql://")
+
+        self.sync_database_url = sync_url
+        return self
 
     def ensure_upload_dir(self) -> None:
         """Create upload directory if it doesn't exist."""
