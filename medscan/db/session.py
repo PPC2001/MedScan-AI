@@ -47,6 +47,11 @@ async def init_db() -> None:
     import medscan.models  # noqa: F401
 
     async with engine.begin() as conn:
+        # Enable postgres extensions first
+        from sqlalchemy import text
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"))
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
