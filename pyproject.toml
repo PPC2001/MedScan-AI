@@ -1,0 +1,115 @@
+[project]
+name = "medscan-ai"
+version = "0.1.0"
+description = "Multimodal Clinical Document Intelligence Pipeline"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    # Core LLM frameworks
+    "langchain>=0.3",
+    "langchain-openai>=0.2",
+    "langchain-anthropic>=0.2",
+    "langchain-community>=0.3",
+    "langgraph>=0.2",
+
+    # RAG & indexing
+    "llama-index>=0.11",
+    "llama-index-vector-stores-postgres>=0.2",
+    "llama-index-embeddings-huggingface>=0.3",
+
+    # Vector stores
+    "pgvector>=0.3",
+    "pinecone-client>=5",
+
+    # Document parsing
+    "unstructured[all-docs]>=0.15",
+    "surya-ocr>=0.6",
+
+    # HuggingFace ecosystem
+    "transformers>=4.44",
+    "sentence-transformers>=3.0",
+    "datasets>=2.20",
+    "accelerate>=0.34",
+    "torch>=2.4",
+    "Pillow>=10.4",
+
+    # Structured extraction
+    "instructor>=1.4",
+
+    # LLM providers
+    "openai>=1.50",
+    "anthropic>=0.34",
+
+    # Web framework
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
+
+    # Database
+    "sqlmodel>=0.0.22",
+    "asyncpg>=0.29",
+    "alembic>=1.13",
+
+    # Validation & settings
+    "pydantic>=2.9",
+    "pydantic-settings>=2.4",
+
+    # Task queue
+    "celery>=5.4",
+    "redis>=5.0",
+
+    # HTTP client
+    "httpx>=0.27",
+
+    # Observability
+    "langsmith>=0.1",
+
+    # Evaluation
+    "ragas>=0.2",
+
+    # Utilities
+    "python-dotenv>=1.0",
+    "rich>=13.7",
+    "tenacity>=8.5",
+    "aiofiles>=24.1",
+    "python-magic>=0.4.27",
+    "pandas>=2.2",
+    "numpy>=1.26",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "faker>=26.0",
+]
+
+[project.scripts]
+medscan-api = "medscan.api.main:run"
+medscan-worker = "medscan.tasks.celery_app:run_worker"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["medscan"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "W", "F", "I", "UP"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

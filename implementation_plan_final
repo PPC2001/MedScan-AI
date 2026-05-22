@@ -1,0 +1,154 @@
+# MedScan AI — Multimodal Clinical Document Intelligence Pipeline
+## Status: ✅ APPROVED — Executing
+
+---
+
+## Full Architecture (3 Layers)
+
+```
+LAYER 1: INGESTION
+  Scanned PDFs → Lab Reports (w/ images) → Clinical Photos → HL7/FHIR
+
+LAYER 2: ENRICHMENT & INDEXING
+  OCR Agent + Layout Parser + Table Extractor + Image Classifier
+  → NER (diseases/meds/vitals) + ICD-10/SNOMED linking + Temporal normalization
+  → pgvector (text) + Pinecone (image embeddings) + PostgreSQL (metadata)
+
+LAYER 3: MULTI-AGENT QUERY (LangGraph)
+  SUPERVISOR AGENT
+    ├── Text RAG Agent
+    ├── Table QA Agent
+    └── Visual Medical Reasoning Agent
+  → Safety & Hallucination Guard (citation verify + confidence + disclaimers)
+
+LAYER 4: EVALUATION & OBSERVABILITY
+  LangSmith Tracing + Custom Eval Harness + RAGAS CI
+```
+
+---
+
+## HuggingFace Task Integrations (12 Tasks)
+
+| HF Task | Pipeline Module | Models |
+|---|---|---|
+| Document QA | `hf/doc_qa.py` | `impira/layoutlm-document-qa` |
+| Image-to-Text | `hf/image_to_text.py` | `Salesforce/blip-image-captioning-large` |
+| Image Classification | `hf/image_classification.py` | `google/vit-base-patch16-224` (fine-tuned) |
+| Object Detection | `hf/object_detection.py` | `microsoft/table-transformer-detection` |
+| Token Classification | `hf/token_classification.py` | `d4data/biomedical-ner-all` |
+| Table QA | `hf/table_qa.py` | `google/tapas-large-finetuned-wtq` |
+| Summarization | `hf/summarization.py` | `Falconsai/medical_summarization` |
+| Zero-Shot Classification | `hf/zero_shot.py` | `facebook/bart-large-mnli` |
+| Visual QA | `hf/vqa.py` | `Salesforce/blip-vqa-base` |
+| Feature Extraction | `hf/feature_extraction.py` | `sentence-transformers/all-MiniLM-L6-v2` |
+| Text Classification | `hf/text_classification.py` | `medicalai/ClinicalBERT` |
+| OCR (Image-to-Text) | `pipeline/ocr.py` | Surya OCR + TrOCR |
+
+---
+
+## Complete File Structure (~55 files)
+
+```
+MedScan_AI/
+├── pyproject.toml
+├── .env.example
+├── docker-compose.yml
+├── alembic.ini
+├── README.md
+│
+├── scripts/
+│   ├── init_db.sql
+│   ├── seed_demo_data.py
+│   └── run_evaluation.py
+│
+├── medscan/
+│   ├── __init__.py
+│   ├── config.py
+│   │
+│   ├── db/
+│   │   ├── __init__.py
+│   │   └── session.py
+│   │
+│   ├── models/
+│   │   ├── __init__.py
+│   │   ├── patient.py
+│   │   ├── document.py
+│   │   ├── chunk.py
+│   │   └── schemas.py
+│   │
+│   ├── hf/                        ← 12 HuggingFace task wrappers
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── doc_qa.py
+│   │   ├── image_to_text.py
+│   │   ├── image_classification.py
+│   │   ├── object_detection.py
+│   │   ├── token_classification.py
+│   │   ├── table_qa.py
+│   │   ├── summarization.py
+│   │   ├── zero_shot.py
+│   │   ├── vqa.py
+│   │   ├── feature_extraction.py
+│   │   └── text_classification.py
+│   │
+│   ├── pipeline/
+│   │   ├── __init__.py
+│   │   ├── ingestion.py           ← master orchestrator
+│   │   ├── ocr.py
+│   │   ├── vision.py
+│   │   ├── chunker.py
+│   │   ├── embedder.py
+│   │   ├── extractor.py
+│   │   └── table_extractor.py
+│   │
+│   ├── vector_store/
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── pgvector_store.py
+│   │   └── pinecone_store.py
+│   │
+│   ├── rag/
+│   │   ├── __init__.py
+│   │   ├── index.py
+│   │   └── retriever.py
+│   │
+│   ├── agents/
+│   │   ├── __init__.py
+│   │   ├── state.py
+│   │   ├── graph.py
+│   │   ├── supervisor.py
+│   │   └── nodes/
+│   │       ├── __init__.py
+│   │       ├── router.py
+│   │       ├── text_rag.py
+│   │       ├── table_qa.py
+│   │       ├── visual_reasoning.py
+│   │       ├── synthesizer.py
+│   │       └── safety_guard.py
+│   │
+│   ├── tasks/
+│   │   ├── __init__.py
+│   │   ├── celery_app.py
+│   │   └── document_tasks.py
+│   │
+│   ├── api/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── dependencies.py
+│   │   └── routers/
+│   │       ├── __init__.py
+│   │       ├── health.py
+│   │       ├── documents.py
+│   │       ├── patients.py
+│   │       └── query.py
+│   │
+│   └── evaluation/
+│       ├── __init__.py
+│       └── evaluator.py
+│
+└── tests/
+    ├── conftest.py
+    ├── test_pipeline.py
+    ├── test_agents.py
+    └── test_api.py
+```
