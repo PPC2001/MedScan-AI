@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from medscan.api.routers import documents, health, patients, query
+from medscan.api.routers import documents, health, patients, query, payments
 from medscan.config import get_settings
 from medscan.db.session import close_db, init_db
 
@@ -79,6 +79,7 @@ def create_app() -> FastAPI:
     app.include_router(documents.router, prefix="/documents", tags=["Documents"])
     app.include_router(patients.router, prefix="/patients", tags=["Patients"])
     app.include_router(query.router, prefix="/query", tags=["Clinical Query"])
+    app.include_router(payments.router, prefix="/payments", tags=["Payments"])
 
     return app
 

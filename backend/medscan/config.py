@@ -106,6 +106,12 @@ class Settings(BaseSettings):
     app_env: str = "development"
     log_level: str = "INFO"
     api_key: str = "medscan-dev-key-change-me"
+    
+    # -------------------------------------------------------------------------
+    # Razorpay
+    # -------------------------------------------------------------------------
+    razorpay_key_id: str = ""
+    razorpay_key_secret: str = ""
 
     # -------------------------------------------------------------------------
     # Computed properties
